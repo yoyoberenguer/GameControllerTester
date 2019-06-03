@@ -8,3 +8,5 @@ A new version will be developped to include bluetooth connections.
 
 1) connect you usb Joystick 
 2) Download Assets directory and start Joystick.exe 
+
+If you intend to run the program from source you need to install pygame and numpy.
