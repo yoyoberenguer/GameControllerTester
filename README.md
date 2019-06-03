@@ -11,7 +11,7 @@ A new version will be developped to include bluetooth connections.
 
 If you intend to run the program from source you need to install pygame and numpy.
 
-![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/screendump0.png)
+![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/screenshot0.png)
 
-![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/Screendump1.png)
+![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/Screenshot1.png)
 
