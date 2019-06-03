@@ -366,8 +366,8 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
         rect.center = coordinates_
         Halo(rect_=rect, timing_=1, layer_=0, id_=id_)
 
-    @staticmethod
-    def tick():
+
+    def tick(self):
         # play the sound MOUSE_CLICK_SOUND
         if not self.SOUND_SERVER.get_identical_id(id(MOUSE_CLICK_SOUND)):
             self.SOUND_SERVER.play(sound_=MOUSE_CLICK_SOUND, loop_=False, priority_=0,
@@ -449,7 +449,7 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
                 # R1
                 elif self.JOYSTICK.button_status[5] and element_ == 5:
                     Halo.images = HALO_SPRITE_GREEN
-                    self.highlight((x + 130, yy - 25), id_=5)
+                    self.highlight((xx + 130, yy - 25), id_=5)
                     self.tick()
                     PS3_BUTTONS[self.configuration][5] = 'R1         : %s' % 'pressed'
                     
@@ -460,7 +460,7 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
                     PS3_BUTTONS[self.configuration][6] = 'L2         : %s' % 'pressed'
                 # R2
                 elif self.JOYSTICK.button_status[7] and element_ == 7:
-                    self.highlight((xx + 130 , self.menu_position[1] - 25 + self.h2), id_=7)
+                    self.highlight((xx + 130, yy - 25), id_=7)
                     self.tick()
                     PS3_BUTTONS[self.configuration][7] = 'R2         : %s' % 'pressed'
                     
@@ -908,7 +908,7 @@ if __name__ == '__main__':
     MAIN_MENU_FONT.antialiased = True
     GL.MAIN_MENU_FONT = MAIN_MENU_FONT
 
-    SCREENRECT = pygame.Rect(0, 0, 800, 1024)
+    SCREENRECT = pygame.Rect(0, 0, 800, 600)
     screen = pygame.display.set_mode(SCREENRECT.size, pygame.HWSURFACE, 32)
     BACKGROUND = pygame.image.load('Assets\\ps3-logo2.png').convert()
     BACKGROUND = pygame.transform.smoothscale(BACKGROUND, SCREENRECT.size)
