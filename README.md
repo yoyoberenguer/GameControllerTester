@@ -1,10 +1,8 @@
 # GameControllerTester
 
-### WORK IN PROGRESS
+### Visual checks of game controllers (PS3, PS4, XBOX). .
 
-### Represent graphically a PS3 game controller and monitor inputs.
-
-The Game controller must be connected to the PC via a USB key. 
+The Game controller must be connected to the PC via a USB key (bluetooth) or directly with a usb cable.
 
 A new version will be developped to include bluetooth connections. 
 
