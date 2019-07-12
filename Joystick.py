@@ -23,68 +23,229 @@ __maintainer__ = "Yoann Berenguer"
 __email__ = "yoyoberenguer@hotmail.com"
 __status__ = "Joystick Demo"
 
-
 import pygame
 from pygame import freetype
 import numpy
+import _pickle as pickle
 
-# PS3 layout (buttons, axes, hats)
-# todo screen shot ?
-PS3_BUTTONS = [
-    # config 1
-    ['TRIANGLE   : %s' % 'N/A',  # 0
-     'CIRCLE     : %s' % 'N/A',  # 1
-     'X          : %s' % 'N/A',  # 3
-     'SQUARE     : %s' % 'N/A',  # 4
-     'L1         : %s' % 'N/A',  # 5
-     'R1         : %s' % 'N/A',  # 6
-     'L2         : %s' % 'N/A',  # 7
-     'R2         : %s' % 'N/A',  # 8
-     # next column
-     'SELECT     : %s' % 'N/A',  # 9
-     'START      : %s' % 'N/A',  # 10
-     'L3 PRESSED : %s' % 'N/A',  # 11
-     'R3 PRESSED : %s' % 'N/A',  # 12
-     'PS         : %s' % 'N/A',  # 13
-     # ----- end of buttons ------------------
-     'L3 LATERAL : %s' % 'RIGHT/LEFT',  # 14
-     'L3 VERTICAL: %s' % 'UP/DOWN',     # 15
-     'R3 LATERAL : %s' % 'RIGHT/LEFT',  # 16
-     'R3 VERTICAL: %s' % 'UP/DOWN',     # 17
+CONTROLLER_LAYOUT = {
+    # Motion sensing(3 axes, 6 degrees of freedom)
+    # 2× Analog
+    # sticks(10 - bit
+    # precision)
+    # 2× Analog
+    # triggers
+    # (L2, R2)
+    # 6× Pressure - sensitive
+    # buttons
+    # (Triangle, Circle, Cross, Square, L1, R1)
+    # Pressure - sensitive
+    # directional
+    # buttons
+    # 5× Digital
+    # buttons
+    # (Start, Select, "PS", L3, R3)
 
-     'D-PAD UP      : %s' % 'N/A',  # 18
-     'D-PAD DOWN    : %s' % 'N/A',  # 19
-     'D-PAD RIGHT   : %s' % 'N/A',  # 20
-     'D-PAD LEFT    : %s' % 'N/A'   # 21
-     ],
-    # config 2
-    ['TRIANGLE   : %s' % 'N/A',  # 0
-     'CIRCLE     : %s' % 'N/A',  # 1
-     'X          : %s' % 'N/A',  # 3
-     'SQUARE     : %s' % 'N/A',  # 4
-     'L1         : %s' % 'N/A',  # 5
-     'R1         : %s' % 'N/A',  # 6
-     'L2         : %s' % 'N/A',  # 7
-     'R2         : %s' % 'N/A',  # 8
-     # next column
-     'SELECT     : %s' % 'N/A',  # 9
-     'START      : %s' % 'N/A',  # 10
-     'L3 PRESSED : %s' % 'N/A',  # 11
-     'R3 PRESSED : %s' % 'N/A',  # 12
-     'PS         : %s' % 'N/A',  # 13
-     # ----- end of buttons ------------------
-     'L3 LATERAL : %s' % 'RIGHT/LEFT',  # 14
-     'L3 VERTICAL: %s' % 'UP/DOWN',     # 15
-     'R3 LATERAL : %s' % 'RIGHT/LEFT',  # 16
-     'R3 VERTICAL: %s' % 'UP/DOWN',     # 17
+    # DUALSHOCK 3 PS3 layout connected with USB cable or using bluethooth
+    # with XBOX 360 drivers emulation
+    # Buttons x 10 (11 with PS button)
 
-     'D-PAD UP      : %s' % 'N/A',  # 18
-     'D-PAD DOWN    : %s' % 'N/A',  # 19
-     'D-PAD RIGHT   : %s' % 'N/A',  # 20
-     'D-PAD LEFT    : %s' % 'N/A'   # 21
-     ]
-]
+    'Controller (XBOX 360 For Windows)':
+    # |----- NAME ------------| NUMBER
+        {'buttons':
+             [{'A          :': (575, 327)},  # 0
+              {'B          :': (617, 300)},  # 1
+              {'X          :': (535, 300)},  # 2
+              {'Y          :': (578, 273)},  # 3
+              {'LBUMPER    :': (265, 230)},  # 4
+              {'RBUMPER    :': (576, 230)},  # 5
+              {'BACK       :': (380, 300)},  # 6
+              {'START      :': (467, 300)},  # 7
+              {'STICK LEFT :': (270, 300)},  # 8
+              {'STICK RIGHT:': (500, 361)},  # 9
+              {'XBOX       :': (423, 253)}],  # 10
+         'axis':
+         # ---------------------------------
+         # AXIS ( 2 axis + 2 pads left right
+         # Left / right same axis but values differs,
+         # left side (0, 1) right side (0, -1)
+             [{'8 AXIS X   :': (270, 300)},  # 0  range X(-1, 1)
+              {'8 AXIS Y   :': (270, 300)},  # 1  range Y(-1, 1)
+              {'LEFT/RIGHT :': [(265, 230), (576, 230)]},  # 2  left side (0, 1) right side (0, -1)
+              {'9 AXIS X   :': (500, 361)},  # 9  range X(-1, 1)
+              {'9 AXIS Y   :': (500, 361)}],  # 9  range Y(-1, 1)
+         # ----------------------------------
+         # HATS return a tuple (0, 0)
+         'hats':
+             [{'D-PAD RIGHT   :': (375, 363)},  # tuple[1] range 0 or 1
+              {'D-PAD LEFT    :': (320, 363)},  # tuple[1] range 0 or -1
+              {'D-PAD UP      :': (346, 344)},  # tuple[0] range 0 or 1
+              {'D-PAD DOWN    :': (346, 384)}  # tuple[0] range 0 or -1
+              ]},
 
+    # GIOTECK VX2 2.4G Wireless PS3 controller layout connected
+    # with USB cable or using bluethooth
+    # with XBOX 360 drivers emulation
+    # Buttons x 13
+    'Gioteck VX2 2.4G Wireless Controller':
+        {'buttons':
+             [{'TRIANGLE   :': (530, 326)},  # 0
+              {'CIRCLE     :': (559, 355)},  # 1
+              {'X          :': (530, 385)},  # 2
+              {'SQUARE     :': (498, 356)},  # 3
+              {'L1         :': (310, 272)},  # 4
+              {'R1         :': (530, 272)},  # 5
+              {'L2         :': (310, 272)},  # 6
+              {'R2         :': (530, 272)},  # 7
+              {'SELECT     :': (387, 356)},  # 8
+              {'START      :': (451, 356)},  # 9
+              {'L3 PRESSED :': (362, 411)},  # 10
+              {'R3 PRESSED :': (474, 411)},  # 11
+              {'PS         :': (420, 376)}],  # 12
+         'axis':
+         # -------------------------------
+         # AXIS x 4 detected (axis 2 controlling right pad and left pad)
+             [{'L3 X       : ': (362, 411)},  # 0  range -1, 1
+              {'L3 Y       : ': (362, 411)},  # 1  range -1, 1
+              {'R3 X       : ': (474, 411)},  # 2  range -1, 1
+              {'R3 Y       : ': (474, 411)}],  # 3  range -1, 1
+         'hats':
+         # ----------------------------------
+         # HATS return a tuple (0, 0)
+             [{'D-PAD UP      :': (330, 355)},  # tuple[1] range 0 or 1
+              {'D-PAD DOWN    :': (287, 355)},  # tuple[1] range 0 or -1
+              {'D-PAD RIGHT   :': (309, 336)},  # tuple[0] range 0 or 1
+              {'D-PAD LEFT    :': (309, 375)}  # tuple[0] range 0 or -1
+              ]},
+
+    # DUALSHOCK 4 PS3 layout connected with USB cable or using bluethooth
+    # with XBOX 360 drivers emulation
+    # 6 axis motion sensing (3 axis accelerometer, 3 axis gyroscope)
+    # 2× Analog sticks
+    # 2× Analog triggers
+    # (L2, R2)
+    # 2× Pressure-sensitive buttons
+    # (L1, R1)
+    # 10× Digital buttons
+    # (Triangle, Circle, Cross, Square, L3, R3, "PS", SHARE, OPTIONS, touchpad click)
+    # Digital directional buttons
+    # 2 point capacitive touchpad with click mechanism (see buttons)[24]
+    'Wireless Controller':
+    # Buttons x 14
+        {'buttons':
+             [{'SQUARE   :': (528, 307)},  # 0
+              {'X        :': (560, 333)},  # 1
+              {'CIRCLE   :': (590, 306)},  # 2
+              {'TRIANGLE :': (560, 281)},  # 3
+              {'L1       :': (295, 245)},  # 4
+              {'R1       :': (555, 245)},  # 5
+              {'L2       :': (295, 245)},  # 6 duplicate with axis
+              {'R2       :': (555, 245)},  # 7 duplicate with axis
+              {'SHARE    :': (340, 270)},  # 8
+              {'OPTIONS  :': (515, 270)},  # 9
+              {'L3       :': (358, 355)},  # 10
+              {'R3       :': (495, 355)},  # 11
+              {'PS       :': (425, 355)},  # 12
+              {'TRIGGER  :': (430, 288)}],  # 13
+         'axis':
+         # -------------------------------
+         # AXIS x 6 detected (axis 2 controlling right pad and left pad)
+             [{'L3 X     :': (358, 355)},  # 0  range -1, 1
+              {'L3 Y     :': (358, 355)},  # 1  range -1, 1
+              {'R3 X     :': (495, 355)},  # 2  range -1, 1
+              {'R3 Y     :': (495, 355)},  # 3  range -1, 1
+              {'R2       :': (555, 245)},  # 4  right side (-1, 1)
+              {'L2       :': (295, 245)}],  # 5  left side (-1, 1)
+         'hats':
+         # ----------------------------------
+         # HATS return a tuple (0, 0)
+             [{'D-PAD UP   :': (317, 305)},  # tuple[1] range 0 or 1
+              {'D-PAD DOWN :': (269, 305)},  # tuple[1] range 0 or -1
+              {'D-PAD RIGHT:': (293, 286)},  # tuple[0] range 0 or 1
+              {'D-PAD LEFT :': (293, 323)}  # tuple[0] range 0 or -1
+              ]}
+}
+
+"""
+        {'buttons': [
+            {'TRIANGLE :': (0, 0)},  # 0
+            {'CIRCLE   :': (0, 0)},  # 1
+            {'X        :': (0, 0)},  # 2
+            {'SQUARE   :': (0, 0)},  # 3
+            {'L1       :': (0, 0)},  # 4
+            {'R1       :': (0, 0)},  # 5
+            {'SELECT   :': (0, 0)},  # 6
+            {'START    :': (0, 0)},  # 7
+            {'L3 CLICK :': (0, 0)},  # 8
+            {'R3 CLICK :': (0, 0)},  # 9
+            {'PS       :': (0, 0)}],  # 10  # not detected when connected with USB cable using XBOX 360 drivers
+            'axis': [
+                # -------------------------------
+                # AXIS x 4 detected (axis 2 controlling right pad and left pad)
+                {'L3 X     :': (0, 0)},  # 0  range -1, 1
+                {'L3 Y     :': (0, 0)},  # 1  range -1, 1
+                {'L2       :': (0, 0)},  # 2  left side (0, 1)
+                {'R2       :': (0, 0)},  # 2  right side (0, -1)
+                {'R3 X     :': (0, 0)},  # 3  range -1, 1
+                {'R3 Y     :': (0, 0)}],  # 4  range -1, 1
+            'hats':
+                 # ----------------------------------
+                 # HATS return a tuple (0, 0)
+                     [{'D-PAD UP      :': (330, 355)},  # tuple[1] range 0 or 1
+                      {'D-PAD DOWN    :': (287, 355)},  # tuple[1] range 0 or -1
+                      {'D-PAD RIGHT   :': (309, 336)},  # tuple[0] range 0 or 1
+                      {'D-PAD LEFT    :': (309, 375)}  # tuple[0] range 0 or -1
+                      ]
+        },
+    
+    # XBOX 360 LAYOUT
+    # Input
+    # Digital D-Pad
+    # 2× Analog triggers (LT, RT)
+    # 2× Analog sticks
+    # 11× Digital buttons
+    # (Y, B, A, X, LB, RB, left stick click, right stick click, Menu, View, Xbox)
+    # Wireless pairing button
+    # Connectivity
+    # Wireless
+    # Micro USB
+    # 3.5 mm stereo audio jack (after 2nd revision)
+    # Bluetooth 4.0 (third revision)
+    # USB-C (Elite Series 2)
+    
+    'XBOX 360 For Windows':
+    #  |----- NAME ------------| NUMBER
+        {'buttons':
+             ['A          :',  # 0
+              'B          :',  # 1
+              'X          :',  # 2
+              'Y          :',  # 3
+              'LBUMPER    :',  # 4
+              'RBUMPER    :',  # 5
+              'BACK       :',  # 6
+              'START      :',  # 7
+              'STICK LEFT :',  # 8
+              'STICK RIGHT:',  # 9
+              'XBOX       :'],  # 10
+         'axis':
+         # ---------------------------------
+         # AXIS ( 2 axis + 2 pads left right
+         # Left / right same axis but values differs,
+         # left side (0, 1) right side (0, -1)
+             ['8 AXIS X   :',  # 0  range X(-1, 1)
+              '8 AXIS Y   :',  # 1  range Y(-1, 1)
+              'LEFT/RIGHT :',  # 2  left side (0, 1) right side (0, -1)
+              '9 AXIS X   :',  # 9  range X(-1, 1)
+              '9 AXIS Y   :'],  # 9  range Y(-1, 1)
+         # ----------------------------------
+         # HATS return a tuple (0, 0)
+         'hats':
+             ['D-PAD UP      :',  # tuple[1] range 0 or 1
+              'D-PAD DOWN    :',  # tuple[1] range 0 or -1
+              'D-PAD RIGHT   :',  # tuple[0] range 0 or 1
+              'D-PAD LEFT    :'  # tuple[0] range 0 or -1
+              ]},
+"""
 
 OPTIONS_MENU_JOYSTICK = {
     1: {'TEXT': 'Disconnected', 'SIZE': 16,
@@ -102,6 +263,7 @@ class GL:
     MOUSE_POS = pygame.math.Vector2(0, 0)
     SOUND_SERVER = None
     JOYSTICK = None
+    MAIN_MENU_FONT = None
 
 
 def make_array(rgb_array_: numpy.ndarray, alpha_: numpy.ndarray) -> numpy.ndarray:
@@ -139,7 +301,7 @@ def make_surface(rgba_array: numpy.ndarray) -> pygame.Surface:
     :return:           Return a pixels alpha surface.This surface contains a transparency value
                        for each pixels.
     """
-    return pygame.image.frombuffer((rgba_array.transpose(1, 0, 2)).copy(order='C').astype(numpy.uint8),
+    return pygame.image.frombuffer((rgba_array.transpose([1, 0, 2])).copy(order='C').astype(numpy.uint8),
                                    (rgba_array.shape[:2][0], rgba_array.shape[:2][1]), 'RGBA').convert_alpha()
 
 
@@ -162,7 +324,7 @@ def blend_texture(surface_, interval_, color_) -> pygame.Surface:
     alpha_channel = pygame.surfarray.pixels_alpha(surface_)
     diff = (numpy.full_like(source_array.shape, color_[:3]) - source_array) * interval_
     rgba_array = numpy.dstack((numpy.add(source_array, diff), alpha_channel)).astype(dtype=numpy.uint8)
-    return pygame.image.frombuffer((rgba_array.transpose(1, 0, 2)).copy(order='C').astype(numpy.uint8),
+    return pygame.image.frombuffer(rgba_array.transpose([1, 0, 2]).copy(order='C').astype(numpy.uint8),
                                    (rgba_array.shape[:2][0], rgba_array.shape[:2][1]), 'RGBA').convert_alpha()
 
 
@@ -202,13 +364,13 @@ def load_per_pixel(file: str) -> pygame.Surface:
 
     assert isinstance(file, str), 'Expecting path for argument <file> got %s: ' % type(file)
     try:
-        surface = pygame.image.load(file)
-        buffer_ = surface.get_view('2')
-        w, h = surface.get_size()
+        surface_ = pygame.image.load(file)
+        buffer_ = surface_.get_view('2')
+        w, h = surface_.get_size()
         source_array = numpy.frombuffer(buffer_, dtype=numpy.uint8).reshape((w, h, 4))
 
         surface_ = pygame.image.frombuffer(source_array.copy(order='C'),
-                                   (tuple(source_array.shape[:2])), 'RGBA').convert_alpha()
+                                           (tuple(source_array.shape[:2])), 'RGBA').convert_alpha()
         return surface_
     except pygame.error:
         raise SystemExit('\n[-] Error : Could not load image %s %s ' % (file, pygame.get_error()))
@@ -243,15 +405,11 @@ class Halo(pygame.sprite.Sprite):
         self.image = self.images_copy[0]
         self.center = rect_.center
         self.rect = self.image.get_rect(center=self.center)
-        self._blend = None      # blend mode
-        self.dt = 0             # time constant
-        self.index = 0          # list index
+        self._blend = None  # blend mode
+        self.dt = 0  # time constant
+        self.index = 0  # list index
         self.timing = timing_
         self.id_ = id_
-        if id_ in self.inventory:
-            self.kill()
-        else:
-            self.inventory.append(id_)
 
     def update(self):
 
@@ -272,20 +430,10 @@ class Halo(pygame.sprite.Sprite):
         self.dt += GL.TIME_PASSED_SECONDS
 
 
-class PS3Scheme(pygame.sprite.Sprite, GL):
+class JoystickEmulator(pygame.sprite.Sprite, GL):
     images = None
-    active = False
-    _force_kill = False
-    _menu_position = None
 
-    def __new__(cls, menu_position_, layer_=0, timing_=120, *args, **kwargs):
-        # return if an instance already exist.
-        if PS3Scheme.active:
-            return
-        else:
-            return super().__new__(cls, *args, **kwargs)
-
-    def __init__(self, menu_position_, layer_=0, timing_=120):
+    def __init__(self,  joystickid_, menu_position_, offset_, layer_=0, timing_=120):
 
         assert isinstance(GL.All, LayeredUpdatesModified), 'GL.All should be a LayeredUpdatesModified class.'
         super(GL, self).__init__()
@@ -294,10 +442,11 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
         assert isinstance(menu_position_, tuple), 'Argument menu_position_ should be a tuple.'
         assert isinstance(layer_, int), 'Argument layer_ should be an integer.'
         assert isinstance(timing_, int), 'Argument timing_ should be an integer.'
-        assert isinstance(PS3Scheme.images, (list, pygame.Surface)), 'Images should be defined as a list of pygame.Surfaces'
+        assert isinstance(JoystickEmulator.images,
+                          (list, pygame.Surface)), 'Images should be defined as a list of pygame.Surfaces'
         assert isinstance(self.SOUND_SERVER, SoundControl), 'Sound Server is not initialised.'
         assert isinstance(MOUSE_CLICK_SOUND, pygame.mixer.Sound), 'MOUSE_CLICK_SOUND should be a pygame.mixer.Sound.'
-        self._layer = layer_
+        self.layer = layer_
 
         if isinstance(self.All, pygame.sprite.LayeredUpdates):
             self.All.change_layer(self, layer_)
@@ -306,275 +455,276 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
             self.images_copy = self.images.copy()
             self.image = self.images_copy[0] if isinstance(self.images_copy, list) else self.images_copy
             self.rect = self.image.get_rect(center=(menu_position_[0], menu_position_[1]))
-        
-        
-        PS3Scheme._force_kill = False           # Variable used for killing the active window
-        self.dt = 0                             # Time constant
-        self.timing = timing_                   # Refreshing time used by the method update
-        self.menu_position = menu_position_     # Window position into the screen, represent the topleft corner
-        self.index = 0                          # Iteration variable
 
-        width, height = PS3Scheme.images.get_size()
+        self.force_kill = False  # Variable used for killing the active window
+        self.dt = 0  # Time constant
+        self.timing = timing_  # Refreshing time used by the method update
+        self.menu_position = menu_position_  # Window position into the screen, represent the topleft corner
+        self.index = 0  # Iteration variable
+
+        width, height = self.image.get_size()
+
         self.canw, self.canh = (700, 500)
         self.canw2, self.canh2 = (700 >> 1, 500 >> 1)
         self.canvas = pygame.Surface((700, 500), depth=32,
                                      flags=(pygame.SWSURFACE | pygame.SRCALPHA))
 
-        assert isinstance(FRAME_BORDER_LEFT, pygame.Surface),\
-                            'FRAME_BORDER_LEFT is not defined or is not a pygame.Surface.'
-                            
+        assert isinstance(FRAME_BORDER_LEFT, pygame.Surface), \
+            'FRAME_BORDER_LEFT is not defined or is not a pygame.Surface.'
+
         bw, bh = FRAME_BORDER_LEFT.get_size()
         self.transparent = pygame.Surface((self.canw - bw, self.canh),
                                           depth=32, flags=(pygame.SWSURFACE | pygame.SRCALPHA))
         self.transparent.fill((50, 80, 138, 220))
         self.canvas.blit(self.transparent, (bw, 0))
-        self.canvas.blit(PS3Scheme.images, (self.canw2 - (width >> 1) + 25,
-                                            self.canh2 - 80))
+        self.canvas.blit(self.image, (self.canw2 - (width >> 1) + 25, self.canh2 - 80))
         self.canvas.blit(FRAME_BORDER_LEFT, (0, 0))
 
         self.image = self.canvas
         self.rect = self.image.get_rect(center=(menu_position_[0], menu_position_[1]))
         self.image_copy = self.image.copy()
 
-        PS3Scheme._menu_position = (menu_position_[0] - self.canw2,
-                                    menu_position_[1] - self.canh2)
+        self.menu_position = (menu_position_[0] - self.canw2 + offset_[0],
+                              menu_position_[1] - self.canh2 + offset_[1])
 
         # RED BUTTON
-        assert isinstance(RED_SWITCH1, pygame.Surface),\
-                            'RED_SWITCH1 is not defined or is not a pygame.Surface.'
-        self.canvas.blit(RED_SWITCH1, (615, 0))
+        assert isinstance(RED_SWITCH1, pygame.Surface), \
+            'RED_SWITCH1 is not defined or is not a pygame.Surface.'
+
         self.exit_rect = RED_SWITCH1.get_rect(
-            topleft=(self.menu_position[0] + self.canw2 - RED_SWITCH1.get_width(),
-                     self.menu_position[1] - self.canh2))
+            topleft=(self.menu_position[0] + self.canw - RED_SWITCH1.get_width(),
+                     self.menu_position[1]))
+
         self.exit_rect = self.exit_rect.inflate(-15, -17)
+        self.canvas.blit(RED_SWITCH1, self.exit_rect.topleft)
 
-        assert isinstance(self.JOYSTICK, JJoystick), 'Joystick is not instanciated.'
-        # ---- remove the joystick bind -------
-        # 1) remove the bind
-        # 2) create the bind again to know if the joystick
-        #    is still present
-        pygame.joystick.quit()
-        # Create the bind again
-        self.JOYSTICK.init_joystick()
-        # ---------------------------------------
-        self.configuration = 0
+        self.joystickid = joystickid_
+        self.avtive = True
+        self.offset = offset_
 
-    @staticmethod
-    def highlight(coordinates_, id_):
+    def highlight(self, coordinates_, id_):
         # create a colorful halo where the button is pressed
         rect = pygame.Rect(0, 0, 10, 10)
         rect.center = coordinates_
-        Halo(rect_=rect, timing_=1, layer_=0, id_=id_)
-
+        Halo(rect_=rect, timing_=1, layer_=self.layer, id_=id_)
 
     def tick(self):
         # play the sound MOUSE_CLICK_SOUND
-        if not self.SOUND_SERVER.get_identical_id(id(MOUSE_CLICK_SOUND)):
-            self.SOUND_SERVER.play(sound_=MOUSE_CLICK_SOUND, loop_=False, priority_=0,
-                                 volume_=0.1, fade_out_ms=0, panning_=True,
-                                 name_='MOUSE CLICK', x_=self.MOUSE_POS[0],
-                                 object_id_=id(MOUSE_CLICK_SOUND))
+        self.SOUND_SERVER.play(sound_=MOUSE_CLICK_SOUND, loop_=False, priority_=0,
+                                   volume_=0.1, fade_out_ms=0, panning_=True,
+                                   name_='MOUSE CLICK', x_=self.MOUSE_POS[0])
 
     def connection(self):
+
         # Check the joystick status connected | disconnected 
         for key, value in OPTIONS_OPTIONS[0].items():
-            if self.JOYSTICK.PRESENT:
-                value['TEXT'] = 'Joystick Connected'
+
+            if pygame.joystick.get_count() > 0:
+                value['TEXT'] = 'Joystick %s Connected.' % pygame.joystick.Joystick(self.joystickid).get_name()
                 value['FOREGROUND'] = (128, 220, 98, 255)
-                rect = self.MAIN_MENU_FONT.get_rect('Joystick Connected',
-                                                  style=freetype.STYLE_NORMAL, size=15)
-                self.image.blit(self.MAIN_MENU_FONT.render('Joystick Connected',
-                                fgcolor=(128, 220, 98, 255),
-                                style=freetype.STYLE_NORMAL,
-                                size=15)[0], ((self.canw - rect.w + 25) // 2, 10))
+                rect = self.MAIN_MENU_FONT.get_rect(value['TEXT'],
+                                                    style=freetype.STYLE_NORMAL, size=10)
+                self.image.blit(self.MAIN_MENU_FONT.render(value['TEXT'],
+                                                           fgcolor=(128, 220, 98, 255),
+                                                           style=freetype.STYLE_NORMAL,
+                                                           size=10)[0], ((self.canw - rect.w + 25) // 2, 10))
             else:
                 value['TEXT'] = 'Joystick Disconnected'
                 value['FOREGROUND'] = (218, 25, 18, 255)
-                rect = self.MAIN_MENU_FONT.get_rect('Joystick Disconnected',
-                                                  style=freetype.STYLE_NORMAL, size=15)
-                self.image.blit(self.MAIN_MENU_FONT.render('Joystick Disconnected',
-                                fgcolor=(218, 25, 18, 255),
-                                style=freetype.STYLE_NORMAL,
-                                size=15)[0], ((self.canw - rect.w + 25) // 2, 10))
+                rect = self.MAIN_MENU_FONT.get_rect(value['TEXT'],
+                                                    style=freetype.STYLE_NORMAL, size=10)
+                self.image.blit(self.MAIN_MENU_FONT.render(value['TEXT'],
+                                                           fgcolor=(218, 25, 18, 255),
+                                                           style=freetype.STYLE_NORMAL,
+                                                           size=10)[0], ((self.canw - rect.w + 25) // 2, 10))
 
     def layout(self):
-        # Draw on the the status of buttons and joystick hats
         style = freetype.STYLE_NORMAL
-        size = 8
-        x = 100
+        size_ = 8
+        x = 80
         y = 50
-        element_ = 0
+        red = (255, 0, 0, 255)
+        white = (255, 255, 255, 255)
+        color_ = white
+        lx = 160
+        ly = 20
+        rows = 7
+        try:
+            joystick_bind = pygame.joystick.Joystick(self.joystickid)
+        except pygame.error as error:
+            print('\n[-]ERROR - %s ' % error)
+            raise SystemExit
 
-        for button in PS3_BUTTONS[self.configuration]:
-            Halo.images = HALO_SPRITE_RED
-            color_ = (255, 255, 255, 255)
-            xx, yy = self.menu_position[0] + self.canw2, self.menu_position[1] + self.canh2
-            # BUTTONS
-            if element_ <= self.JOYSTICK.button - 1 and self.JOYSTICK.button_status[element_]:
-                
-                # Triangle
-                if self.JOYSTICK.button_status[0] and element_ == 0:
-                    Halo.images = HALO_SPRITE_GREEN
-                    self.highlight(( xx + 130, yy + 25), id_=0)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][0] = 'TRIANGLE   : %s' % 'pressed'
-                    
-                # Circle
-                elif self.JOYSTICK.button_status[1] and element_ == 1:
-                    Halo.images = HALO_SPRITE_RED
-                    self.highlight((xx + 158, yy + 55), id_=1)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][1] = 'CIRCLE     : %s' % 'pressed'
-                # X
-                elif self.JOYSTICK.button_status[2] and element_ == 2:
-                    Halo.images = HALO_SPRITE_BLUE
-                    self.highlight((xx + 130, yy + 85 ), id_=2)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][2] = 'X          : %s' % 'pressed'
-                    
-                # Square
-                elif self.JOYSTICK.button_status[3] and element_ == 3:
-                    Halo.images = HALO_SPRITE_PURPLE
-                    self.highlight((xx + 102, yy + 55), id_=3)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][3] = 'SQUARE     : %s' % 'pressed'
-                    
-                # L1
-                elif self.JOYSTICK.button_status[4] and element_ == 4:
-                    Halo.images = HALO_SPRITE_GREEN
-                    self.highlight((xx - 90, yy - 25), id_=4)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][4] = 'L1         : %s' % 'pressed'
-                    
-                # R1
-                elif self.JOYSTICK.button_status[5] and element_ == 5:
-                    Halo.images = HALO_SPRITE_GREEN
-                    self.highlight((xx + 130, yy - 25), id_=5)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][5] = 'R1         : %s' % 'pressed'
-                    
-                # L2
-                elif self.JOYSTICK.button_status[6] and element_ == 6:
-                    self.highlight((xx - 90, yy - 25), id_=6)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][6] = 'L2         : %s' % 'pressed'
-                # R2
-                elif self.JOYSTICK.button_status[7] and element_ == 7:
-                    self.highlight((xx + 130, yy - 25), id_=7)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][7] = 'R2         : %s' % 'pressed'
-                    
-                # select
-                elif self.JOYSTICK.button_status[8] and element_ == 8:
-                    self.highlight((xx - 15, yy + 55), id_=8)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][8] = 'SELECT     : %s' % 'pressed'
-                    
-                # start
-                elif self.JOYSTICK.button_status[9] and element_ == 9:
-                    self.highlight((xx + 50, yy + 55), id_=9)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][9] = 'START      : %s' % 'pressed'
-                    
-                # L3 PRESSED
-                elif self.JOYSTICK.button_status[10] and element_ == 10:
-                    self.highlight((xx - 38, yy + 110), id_=10)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][10] = 'L3 PRESSED : %s' % 'pressed'
-                    
+        if not joystick_bind.get_init():
+            joystick_bind.init()
 
-                # R3 PRESSED
-                elif self.JOYSTICK.button_status[11] and element_ == 11:
-                    self.highlight((xx + 75, yy + 110), id_=11)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][11] = 'L3 PRESSED : %s' % 'pressed'
+        joystick_name = joystick_bind.get_name()
 
+        if isinstance(CONTROLLER_LAYOUT, dict):
+            layouts = CONTROLLER_LAYOUT.keys()
+        else:
+            raise AssertionError('\n[-]ERROR - CONTROLLER_LAYOUT is not a python dictionary')
 
-                # ps
-                elif self.JOYSTICK.button_status[12] and element_ == 12:
-                    self.highlight((xx + 20, yy + 75), id_=12)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][12] = 'PS         : %s' % 'pressed'
-                color_ = (255, 0, 0, 255)
+        if joystick_name not in layouts:
+            print('\n[-]INFO - No layout associated to joystick device %s ' % joystick_name)
+        else:
 
-            # AXES
-            elif 12 < element_ < 17:
-                if self.JOYSTICK.axes_status[(element_ - self.JOYSTICK.button) % len(self.JOYSTICK.axes_status)] != 0.0:
-                    
-                    if element_ == 13:
-                        button = 'L3 LATERAL : %s' % 'RIGHT/LEFT ' + str(round(self.JOYSTICK.axes_status[0], 3))
-                        Halo.images = HALO_SPRITE
-                        self.highlight((xx - 38, yy + 110), id_=13)
-                        
-                    elif element_ == 14:
-                        button = 'L3 VERTICAL: UP/DOWN ' + str(round(self.JOYSTICK.axes_status[1], 3))
-                        Halo.images = HALO_SPRITE
-                        self.highlight((xx - 38, yy + 110), id_=14)
-                        
-                    elif element_ == 15:
-                        button = 'R3 LATERAL : %s' % 'RIGHT/LEFT ' + str(round(self.JOYSTICK.axes_status[2], 3))
-                        Halo.images = HALO_SPRITE
-                        self.highlight((xx + 75, yy + 110), id_=15)
-                        
+            layout = CONTROLLER_LAYOUT[joystick_name]
+            buttons = layout['buttons']
+            axes = layout['axis']
+            hats = layout['hats']
+            i = 0
+
+            button_number = joystick_bind.get_numbuttons()
+
+            if len(buttons) >= button_number:
+
+                for b in range(0, button_number):
+                    color_ = white
+                    pressed = joystick_bind.get_button(b)
+                    if b == 0:
+                        Halo.images = HALO_SPRITE_PURPLE
+                    elif b == 1:
+                        Halo.images = HALO_SPRITE_BLUE
+                    elif b in (2, 6, 7):
+                        Halo.images = HALO_SPRITE_RED
+                    elif b == 3:
+                        Halo.images = HALO_SPRITE_GREEN
+
                     else:
-                        button = 'R3 VERTICAL: UP/DOWN ' + str(round(self.JOYSTICK.axes_status[3], 3))
-                        Halo.images = HALO_SPRITE
-                        self.highlight((xx + 75, yy + 110), id_=16)
-                    color_ = (255, 0, 0, 255)
-            # D-PAD
-            else:
-                # D-PAD UP
-                if element_ == 17 and self.JOYSTICK.hats_status[0][1] == 1:
-                    color_ = (255, 0, 0, 255)
-                    self.highlight((xx - 90,  yy + 35), id_=17)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][17] = 'D-PAD UP      : %s' % 'pressed'
-                    
-                # D-PAD DOWN
-                elif element_ == 18 and self.JOYSTICK.hats_status[0][1] == -1:
-                    # item highlighted
-                    color_ = (255, 0, 0, 255)
-                    self.highlight((xx - 90, yy + 75), id_=18)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][18] = 'D-PAD DOWN    : %s' % 'pressed'
-                    
-                # D-PAD RIGHT
-                elif element_ == 19 and self.JOYSTICK.hats_status[0][0] == 1:
-                    color_ = (255, 0, 0, 255)
-                    self.highlight((xx - 70, yy + 55), id_=19)
-                    self.tick()
-                    PS3_BUTTONS[self.configuration][19] = 'D-PAD RIGHT   : %s' % 'pressed'
-                    
-                # D-PAD LEFT
-                else:
-                    if element_ == 20 and self.JOYSTICK.hats_status[0][0] == -1:
-                        # item highlighted
-                        color_ = (255, 0, 0, 255)
-                        self.highlight((xx - 110, yy + 55), id_=20)
+                        Halo.images = HALO_SPRITE_GREEN
+
+                    if pressed:
+                        xx, yy = list(*buttons[b].values())
+
+                        self.highlight((xx + self.offset[0], yy + self.offset[1]), id_=0)
+                        input_ = str(list(buttons[i].keys())[0]) + 'pressed'
+                        color_ = red
+                        self.tick()  # if b not in (6, 7) else None
+                    else:
+                        input_ = str(list(buttons[i].keys())[0]) + 'n/a'
+
+                    if i != 0 and i % rows == 0:
+                        y = 50
+                        x += lx
+
+                    self.image.blit(self.MAIN_MENU_FONT.render(input_,
+                                                               fgcolor=color_,
+                                                               style=style,
+                                                               size=size_)[0], (x, y))
+                    i += 1
+                    y += ly
+
+            x += lx
+            y = 50
+            axes_number = joystick_bind.get_numaxes()
+            i = 0
+            if len(axes) >= axes_number:
+
+                for ax in range(0, axes_number):
+                    input_ = str(axes[i])
+
+                    if i != 0 and i % rows == 0:
+                        y = 50
+                        x += lx
+
+                    pressed = joystick_bind.get_axis(ax)
+                    if abs(pressed) > 0.1:
+
+                        if joystick_name in ('Wireless Controller',
+                                             'Gioteck VX2 2.4G Wireless Controller',
+                                             'Generic'):
+
+                            if ax in (4, 5):
+
+                                if abs(pressed) < 1:
+                                    xx, yy = list(list(axes[ax].values()))[0]
+                                    Halo.images = HALO_SPRITE_PURPLE
+                                    self.highlight((xx + self.offset[0], yy + self.offset[1]), id_=0)
+                                    color_ = red
+                                    input_ = str(list(axes[ax].keys())[0]) + str(round(pressed, 3))
+                                else:
+                                    color_ = white
+                                    input_ = str(list(axes[ax].keys())[0]) + '0.0'
+
+                            else:
+
+                                xx, yy = list(list(axes[ax].values()))[0]
+                                Halo.images = HALO_SPRITE_RED
+                                self.highlight((xx + self.offset[0], yy + self.offset[1]), id_=0)
+                                input_ = str(list(axes[ax].keys())[0]) + str(round(pressed, 3))
+                                color_ = red
+
+                        elif joystick_name == 'Controller (XBOX 360 For Windows)':
+                            if ax == 2:
+                                values = list(*axes[ax].values())
+                                left, right = values[0], values[1]
+                                if pressed > 0:
+                                    xx, yy = left
+                                else:
+                                    xx, yy = right
+                                Halo.images = HALO_SPRITE_RED
+                                self.highlight((xx + self.offset[0], yy + self.offset[1]), id_=0)
+                                color_ = red
+                                input_ = str(list(axes[ax].keys())[0]) + str(round(pressed, 3))
+                            else:
+                                xx, yy = list(list(axes[ax].values()))[0]
+                                Halo.images = HALO_SPRITE_PURPLE
+                                self.highlight((xx + self.offset[0], yy + self.offset[1]), id_=0)
+                                color_ = red
+                                input_ = str(list(axes[ax].keys())[0]) + str(round(pressed, 3))
+
+                        else:
+                            print('\n[-]INFO - Joystick not recognized...')
+
+                    else:
+                        input_ = str(list(axes[ax].keys())[0]) + '0.0'
+                        color_ = white
+
+                    self.image.blit(self.MAIN_MENU_FONT.render(input_, fgcolor=color_, style=style,
+                                                               size=size_)[0], (x, y))
+                    i += 1
+                    y += ly
+
+            x += lx
+            y = 50
+            hats_number = joystick_bind.get_numhats()
+            if len(hats) >= hats_number:
+                for h in range(0, hats_number):
+                    hat = joystick_bind.get_hat(h)
+                    if any(hat):
+                        color_ = red
+                    else:
+                        color_ = white
+                    input_ = 'D-PAD   ' + str(hat)  # str(list(hats[0].keys())[0]) + str(hat)
+
+                    if any(hat) != 0:
+                        xx = 0
+                        yy = 0
+                        Halo.images = HALO_SPRITE_BLUE
+                        if hat[0] == 1:
+                            xx, yy = list(*hats[0].values())
+                        if hat[0] == -1:
+                            xx, yy = list(*hats[1].values())
+                        if hat[1] == 1:
+                            xx, yy = list(*hats[2].values())
+                        if hat[1] == -1:
+                            xx, yy = list(*hats[3].values())
+
+                        self.highlight((xx + self.offset[0], yy + self.offset[1]), id_=0)
                         self.tick()
-                        PS3_BUTTONS[self.configuration][20] = 'D-PAD LEFT    : %s' % 'pressed'
+                    self.image.blit(self.MAIN_MENU_FONT.render(input_, fgcolor=color_, style=style,
+                                                               size=size_)[0], (x, y))
 
-            self.image.blit(self.MAIN_MENU_FONT.render(button,
-                                                     fgcolor=color_,
-                                                     style=style,
-                                                     size=size)[0], (x, y))
-
-            if element_ == 8 or element_ == 17:
-                x += 200  # next column
-                y = 50    # first row
-
-            else:
-                y += 15
-
-            element_ += 1
+                    y += ly
 
     def update(self):
 
-        self.menu_position = PS3Scheme._menu_position
+        # self.menu_position = JoystickEmulator._menu_position
 
-        if PS3Scheme._force_kill:
-            PS3Scheme._force_kill = False
-            PS3Scheme.active = False
+        if self.force_kill:
+            self.force_kill = False
+            self.active = False
             self.kill()
             return
 
@@ -582,27 +732,23 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
 
             self.image = self.image_copy.copy()
 
-            PS3Scheme.active = True
+            self.active = True
 
             self.connection()
 
-            if self.JOYSTICK.PRESENT:
+            if pygame.joystick.get_count() > 0:
                 self.layout()
 
             self.image.blit(RED_SWITCH1, (615, 0))
 
             # collision detection with the red switch
             if self.exit_rect.collidepoint(self.MOUSE_POS):
+
                 self.image.blit(RED_SWITCH2, (615, 0))
                 # user pressed left click to confirm exit
                 if pygame.mouse.get_pressed()[0]:
                     self.image.blit(RED_SWITCH3, (615, 0))
-                    PS3Scheme._force_kill = True
-                    self.SOUND_SERVER.stop_object(id(MOUSE_CLICK_SOUND))
-                    self.SOUND_SERVER.play(sound_=MOUSE_CLICK_SOUND, loop_=False, priority_=0,
-                                         volume_=1, fade_out_ms=0, panning_=True,
-                                         name_='MOUSE CLICK', x_=self.MOUSE_POS[0],
-                                         object_id_=id(MOUSE_CLICK_SOUND))
+                    self.force_kill = True
 
             if isinstance(self.images_copy, list):
                 if self.index < len(self.images_copy) - 1:
@@ -613,252 +759,6 @@ class PS3Scheme(pygame.sprite.Sprite, GL):
             self.dt = 0
 
         self.dt += self.TIME_PASSED_SECONDS
-
-
-class JoystickObject:
-    """ Create a Joystick player referencing the device """
-
-    def __init__(self, id_: int = None,
-                 name_: str = None,
-                 axes_: int = None,
-                 buttons_: int = None,
-                 hats_: int = None,
-                 balls_: int = None):
-        """
-        :param id_:         get the Joystick ID
-        :param name_:       get the Joystick system name
-        :param axes_:       get the number of axes on a Joystick
-        :param buttons_:    get the number of buttons on a Joystick
-        :param hats_:       get the number of hat controls on a Joystick
-        :param balls_:      get the number of trackballs on a Joystick
-        """
-        self.id = id_
-        self.name = name_
-        self.axes = axes_
-        self.button = buttons_
-        self.hats = hats_
-        self.balls = balls_
-        self.button_status = [False for i in range(self.button)]
-        self.axes_status = [0 for i in range(self.axes)]
-        self.hats_status = [(0, 0) for i in range(self.hats)]
-
-
-class JJoystick(JoystickObject):
-    
-    """ prior testing the Joystick 
-        1) The pygame display has to be initialised 
-        2) The event loop has to be setup 
-        
-    """
-    PRESENT = False  # Confirm if a joystick is connected
-    QUANTITY = 0  # How many joystick(s) are connected
-    OBJECT = None  # Bind to the device
-
-    def __init__(self, joystick_id_: int = 0, sensitivity_: float = 0.01, verbosity_: bool = False):
-
-        assert isinstance(joystick_id_, int), \
-            'Expecting int for argument joystick_id_ got %s ' % type(joystick_id_)
-        assert isinstance(sensitivity_, float), \
-            'Expecting float for argument sensitivity_ got %s ' % type(sensitivity_)
-        assert isinstance(verbosity_, bool), \
-            'Expecting bool for argument verbosity_ got %s ' % type(verbosity_)
-
-        self.verbosity = verbosity_
-        self.id = joystick_id_
-        # axis sensitivity_.
-        # Below this value the changes are ignored
-        self.sensitivity = sensitivity_
-
-        self.init_joystick()
-
-    def init_joystick(self):
-        if not pygame.joystick.get_init():
-            pygame.joystick.init()
-
-        if pygame.joystick.get_count() == 0:
-            self.joystick_not_present()
-        else:
-            if self.verbosity:
-                print('Joystick detected')
-            JJoystick.PRESENT = True
-            self.check_joystick_quantity()
-            args = self.create_joystick_object(self.id)
-            if args is not None:
-                JoystickObject.__init__(self, *args)
-            else:
-                self.joystick_not_present()
-
-    def joystick_not_present(self):
-        """ Check if joystick(s) exist """
-        JJoystick.PRESENT = False  # Confirmation
-        JJoystick.QUANTITY = 0
-        print('Joystick with id %s is not detected' % self.id)
-
-    def check_joystick_quantity(self):
-        """ Check the number of joystick connected  """
-        try:
-            JJoystick.QUANTITY = pygame.joystick.get_count()
-
-        except pygame.error as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-    def create_joystick_object(self, joystick_id_: int = 0) -> tuple:
-        """ Create a new joystick to access a physical device. """
-        try:
-            arguments = None
-
-            assert isinstance(joystick_id_, int), \
-                'Expecting int for argument joystick_id_ got %s ' % type(joystick_id_)
-
-            if JJoystick.PRESENT:
-                JJoystick.OBJECTS = None
-                JJoystick.OBJECT = pygame.joystick.Joystick(joystick_id_)
-                JJoystick.OBJECT.init()
-
-                if self.verbosity:
-                    print(JJoystick.OBJECT.get_id(), \
-                          JJoystick.OBJECT.get_name(), \
-                          JJoystick.OBJECT.get_numaxes(), \
-                          JJoystick.OBJECT.get_numbuttons(), \
-                          JJoystick.OBJECT.get_numhats(), \
-                          JJoystick.OBJECT.get_numballs)
-
-                arguments = JJoystick.OBJECT.get_id(), \
-                            JJoystick.OBJECT.get_name(), \
-                            JJoystick.OBJECT.get_numaxes(), \
-                            JJoystick.OBJECT.get_numbuttons(), \
-                            JJoystick.OBJECT.get_numhats(), \
-                            JJoystick.OBJECT.get_numballs
-
-        except (pygame.error, AssertionError) as err:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print('\n[-] %s ' % err)
-
-        finally:
-            return arguments
-
-    def check_all_buttons_status(self):
-        """
-            Goes through all the joystick buttons
-        """
-        try:
-            if self.button > 0:
-                for i in range(self.button):
-                    self.button_status[i] = True if JJoystick.OBJECT.get_button(i) else False
-
-        except Exception as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-    def check_button_status(self, button_: int = 0):
-        """ return the button number being pressed, otherwise return None"""
-        argument = None
-        try:
-            if self.button > 0:
-                assert isinstance(button_, int), \
-                    'Expecting int for argument button_ got %s ' % type(button_)
-                argument = JJoystick.OBJECT.get_button(button_)
-        except (pygame.error, AssertionError) as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-        finally:
-            return argument
-
-    def check_axes_position(self):
-        """ Check all joystick axes and store the positions into a list call self.axes_status.
-            The position is rounded to zero (0.0) if the value is in between (-self.sensitivity...+sensitivity)
-            By default self.sensitivity is set to 0.01
-        """
-        try:
-            if self.axes > 0:
-                for axis in range(self.axes):
-                    axis_response = JJoystick.OBJECT.get_axis(axis)
-                    self.axes_status[axis] = axis_response if axis_response > self.sensitivity \
-                                                              or axis_response < -self.sensitivity else 0.0
-        except Exception as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-    def check_axis_position(self, axis_number_: int = 0):
-        """ Check a given axis number and return its value """
-        try:
-            argument = None
-            if self.axes > 0:
-                assert isinstance(axis_number_, int), \
-                    'Expecting int for argument axis_number_ got %s ' % type(axis_number_)
-                axis_response = JJoystick.OBJECT.get_axis(axis_number_)
-                argument = axis_response if axis_response > self.sensitivity \
-                                            or axis_response < -self.sensitivity else 0.0
-        except (pygame.error, AssertionError) as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-        finally:
-            return argument
-
-    def check_hats_status(self):
-        """ Check all joystick axes and store the positions into a list.
-            The position is rounded to zero (0.0) if the value is in between (-self.sensitivity...+sensitivity)
-            By default self.sensitivity is set to 0.01
-        """
-        try:
-            if self.hats > 0:
-                for hat in range(self.hats):
-                    self.hats_status[hat] = JJoystick.OBJECT.get_hat(hat)
-        except Exception as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-    def check_hat_status(self, hat_number_: int = 0):
-        """ Check a given hat and return its value """
-        argument = None
-        try:
-            if self.hats > 0:
-                assert isinstance(hat_number_, int), \
-                    'Expecting int for argument hat got %s ' % type(hat_number_)
-                argument = JJoystick.OBJECT.get_hat(hat_number_)
-
-        except (pygame.error, AssertionError) as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-        finally:
-            return argument
-
-    def check_ball_position(self, ball_number_: int = 0):
-        argument = None
-        try:
-            if self.balls > 0:
-                assert isinstance(ball_number_, int), \
-                    'Expecting int for argument ball_number_ got %s ' % type(ball_number_)
-                argument = JJoystick.OBJECT.get_ball(ball_number_)
-
-        except (pygame.error, AssertionError) as e:
-            JJoystick.QUANTITY = 0
-            JJoystick.PRESENT = False
-            if self.verbosity:
-                print(e)
-
-        finally:
-            return argument
 
 
 class LayeredUpdatesModified(pygame.sprite.LayeredUpdates):
@@ -916,6 +816,13 @@ if __name__ == '__main__':
     PS3_SCHEME = pygame.image.load('Assets\\PS3_Layout.png').convert_alpha()
     PS3_SCHEME = pygame.transform.smoothscale(PS3_SCHEME, (600, 272))
 
+    XBOX_SCHEME = pygame.image.load('Assets\\xbox1.png').convert_alpha()
+    XBOX_SCHEME = pygame.transform.smoothscale(XBOX_SCHEME, (600, 272))
+
+    DUALSHOCK4 = pygame.image.load('Assets\\PS4.png')
+    DUALSHOCK4 = pygame.transform.smoothscale(DUALSHOCK4, (600, 272))
+    DUALSHOCK4.set_colorkey((255, 255, 255, 255))
+
     FRAME_BORDER_LEFT = pygame.image.load('Assets\\dModScreens06.png').convert_alpha()
     FRAME_BORDER_LEFT = pygame.transform.smoothscale(FRAME_BORDER_LEFT, (FRAME_BORDER_LEFT.get_width(), 500))
 
@@ -972,7 +879,6 @@ if __name__ == '__main__':
     HALO_SPRITE_GREEN_ = load_per_pixel('Assets\\WhiteHalo.png')
 
     for number in range(30):
-
         surface = blend_texture(HALO_SPRITE_GREEN_, steps[number], pygame.Color(25, 255, 18, 255))
         rgb = pygame.surfarray.pixels3d(surface)
         alpha = pygame.surfarray.array_alpha(surface)
@@ -1020,14 +926,26 @@ if __name__ == '__main__':
     GL.All = LayeredUpdatesModified()
     GL.TIME_PASSED_SECONDS = 0
 
-    GL.JOYSTICK = JJoystick(0, 0.01, verbosity_=False)
-
     Halo.images = HALO_SPRITE_RED
     Halo.containers = GL.All
 
-    PS3Scheme.containers = GL.All
-    PS3Scheme.images = PS3_SCHEME
-    ps3 = PS3Scheme(SCREENRECT.center, layer_=0, timing_=100)
+    count = pygame.joystick.get_count()
+    if not count > 0:
+        print('\n[-]INFO - Joystick not connected...')
+        raise SystemExit
+
+    for id in range(count):
+        jjobject = pygame.joystick.Joystick(id)
+        jjobject.init()
+        if jjobject.get_name() == 'Controller (XBOX 360 For Windows)':
+            SCHEME = XBOX_SCHEME
+        elif jjobject.get_name() == 'Wireless Controller':
+            SCHEME = DUALSHOCK4
+        else:
+            SCHEME = PS3_SCHEME
+        JoystickEmulator.containers = GL.All
+        JoystickEmulator.images = SCHEME
+        JoystickEmulator(id, SCREENRECT.center, offset_=(id * 50, id * 50), layer_=id, timing_=100)
 
     clock = pygame.time.Clock()
     STOP_GAME = False
@@ -1038,22 +956,22 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             keys = pygame.key.get_pressed()
 
+            if keys[pygame.K_F8]:
+                pygame.image.save(screen, 'screenshot' + str(FRAME) + '.png')
+
             if event.type == pygame.QUIT:
                 print('Quitting')
                 STOP_GAME = True
 
             if event.type == pygame.MOUSEMOTION:
                 GL.MOUSE_POS = pygame.math.Vector2(event.pos)
+                # print(GL.MOUSE_POS)
 
         screen.blit(BACKGROUND, (0, 0))
         GL.All.update()
         GL.All.draw(screen)
         GL.TIME_PASSED_SECONDS = clock.tick(60)
 
-        # update list of all joystick buttons
-        GL.JOYSTICK.check_all_buttons_status()
-        GL.JOYSTICK.check_axes_position()
-        GL.JOYSTICK.check_hats_status()
         pygame.display.flip()
         FRAME += 1
         GL.SOUND_SERVER.update()
