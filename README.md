@@ -1,6 +1,6 @@
 # GameControllerTester
 
-### Visual checks of game controllers inputs (PS3, PS4, XBOX). .
+### Visual checks of game controller's inputs (e.g PS3, PS4, XBOX). .
 
 The Game controller must be connected to the PC via a USB key (bluetooth) or directly with a usb cable.
 
