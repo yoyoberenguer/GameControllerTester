@@ -4,8 +4,6 @@
 
 The Game controller must be connected to the PC via a USB key (bluetooth) or directly with a usb cable.
 
-A new version will be developped to include bluetooth connections. 
-
 1. Connect you usb Joystick 
 2. Download Assets directory and start Joystick.exe 
 
