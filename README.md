@@ -1,11 +1,12 @@
 # GameControllerTester
-# Support 4 joystick at once 
+# Support 4 joystick at once (compatibe PS3, PS4, XBOX)
+# Please report any bugs (project in development)
 
 ### Visual checks of game controller's inputs (e.g PS3, PS4, XBOX). .
 
 The Game controller must be connected to the PC via a USB key (bluetooth) or directly with a usb cable.
 
-1. Connect you usb Joystick 
+1. Connect your Joystick(s) via USB  
 2. DOWNLOAD PS3 DRIVER FROM A SAFE SITE (SCP-DS-Driver-Package-1.2.0.160) and install the drivers for windows
 
 ![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/screenshot1.PNG)
