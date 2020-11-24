@@ -39,4 +39,4 @@ and a C-compiler are correctly install on your system.
 ## DEMO
 ```
 Edit the file joystick.py in your favorite python IDE and run it 
-Or run joystick.py 
+Or run C:\>python joystick.py 
