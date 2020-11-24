@@ -7,7 +7,7 @@ The Game controller must be connected to the PC via a USB key (bluetooth) or dir
 1. Connect you usb Joystick 
 2. Download Assets directory and start Joystick.exe 
 
-![alt text](https://github.com/yoyoberenguer/python-Fire-Effect-/blob/main/screenshot101.png)
+![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/screenshot1.PNG)
 
 ```
 DOWNLOAD PS3 DRIVER FROM A SAFE SITE (SCP-DS-Driver-Package-1.2.0.160)
