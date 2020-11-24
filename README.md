@@ -1,6 +1,6 @@
 # GameControllerTester
-# Support 4 joystick at once (compatibe PS3, PS4, XBOX)
-# Please report any bugs (project in development)
+### Support 4 joystick at once (compatibe PS3, PS4, XBOX)
+### Please report any bugs (project in development)
 
 ### Visual checks of game controller's inputs (e.g PS3, PS4, XBOX). .
 
