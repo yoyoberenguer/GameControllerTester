@@ -1,17 +1,15 @@
 # GameControllerTester
+# Support 4 joystick at once 
 
 ### Visual checks of game controller's inputs (e.g PS3, PS4, XBOX). .
 
 The Game controller must be connected to the PC via a USB key (bluetooth) or directly with a usb cable.
 
 1. Connect you usb Joystick 
-2. Download Assets directory and start Joystick.exe 
+2. DOWNLOAD PS3 DRIVER FROM A SAFE SITE (SCP-DS-Driver-Package-1.2.0.160) and install the drivers for windows
 
 ![alt text](https://github.com/yoyoberenguer/GameControllerTester/blob/master/screenshot1.PNG)
 
-```
-DOWNLOAD PS3 DRIVER FROM A SAFE SITE (SCP-DS-Driver-Package-1.2.0.160)
-```
 
 ## REQUIREMENT:
 ```
@@ -38,5 +36,5 @@ and a C-compiler are correctly install on your system.
 ```
 ## DEMO
 ```
-Edit the file fire_demo.py in your favorite python IDE and run it 
+Edit the file joystick.py in your favorite python IDE and run it 
 Or run joystick.py 
