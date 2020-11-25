@@ -17,8 +17,9 @@ The Game controller must be connected to the PC via a USB key (bluetooth) or dir
 
 ## REQUIREMENT:
 ```
+pip install pygame platform cython numpy==1.19.3
+
 - python > 3.0
-- Platform
 - numpy
 - pygame 
 - Cython
