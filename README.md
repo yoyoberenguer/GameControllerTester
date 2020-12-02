@@ -5,6 +5,11 @@ Please report any bugs (project in development).
 Compatible with pygame 2.0
 ```
 
+## New release 
+```
+Install the program using Setup_JoystickController.exe
+```
+
 ### Visual checks of game controller's inputs (e.g PS3, PS4, XBOX). .
 
 The Game controller must be connected to the PC via a USB key (bluetooth) or directly with a usb cable.
