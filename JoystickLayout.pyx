@@ -119,6 +119,7 @@ if ps4_width!=600 or ps4_height !=272:
 
 CONTROLLER_LAYOUT = {
 
+# 11 BUTTONS
 'XBOX 360 CONTROLLER':
     {'buttons':
          [{'A          :': XBOX_BUTTON_VERTICES[0]},
@@ -183,6 +184,7 @@ CONTROLLER_LAYOUT = {
     #           {'D-PAD LEFT    :': PS3_DPAD_VERTICES[1]}  # tuple[0] range 0 or -1
     #           ]},
 
+    # 13 BUTTONS
     "PLAYSTATION 3 CONTROLLER":
         {'buttons':
              [{'TRIANGLE   :': PS3_BUTTON_VERTICES[0]},  # 0
@@ -216,7 +218,7 @@ CONTROLLER_LAYOUT = {
 
 
     "PLAYSTATION 4 CONTROLLER":
-    # Buttons x 14
+        # Buttons x 16
         {'buttons':
              [{'X        :': PS4_BUTTON_VERTICES[0]},  # 0
               {'CIRCLE   :': PS4_BUTTON_VERTICES[1]},  # 1

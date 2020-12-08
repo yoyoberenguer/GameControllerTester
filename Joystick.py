@@ -1,10 +1,13 @@
 # encoding: utf-8
 
-
 # DOWNLOAD PS3 DRIVER FROM A SAFE SITE https://sourceforge.net/projects/scptoolkit.mirror/
 # OR USE THE DRIVERS IN THE CURRENT PROJECT SCP-DS-Driver-Package-1.2.0.160 (COMPATIBLE 32 & 64 bits)
+
 # BUILD THE CYTHON CODE FROM COMMAND LINE:
 # C:\>python setup_project.py build_ext --inplace
+
+# BUILDING EXECUTABLE
+# pyinstaller --onefile Joystick.spec
 
 # REQUIREMENT
 # Cython	0.29.21	0.29.21
@@ -17,11 +20,12 @@
 # scipy	1.5.4	1.5.4
 # setuptools	50.3.2	50.3.2
 
-__version__ = 1.00
+__version__ = "1.0.2"
 __author__  = "Yoann Berenguer"
 
-# TODO get.instance_id will failed with SLD <2.0
-# TODO get_guid will failed with SLD <2.0
+# version 1.0.2
+# Bug correction when quiting a specific Joystick (Joystick Frame still remaining on the canvas)
+# Recognized controller by button numbers (11: XBOX compatible, 13:PS3 compatible, 16:PS4 compatible)
 
 """
 
@@ -35,7 +39,7 @@ FINGERUP           touch_id, finger_id, x, y, dx, dy
 MOUSEWHEEL         which, flipped, x, y
 MULTIGESTURE       touch_id, x, y, pinched, rotated, num_fingers
 TEXTEDITING        text, start, length
-TEXTINPUT          text
+TEXTINPUT          textHominMissile.spec
 WINDOWEVENT        event
 
 SDL2 supports controller hotplugging:
@@ -718,6 +722,8 @@ def is_joystick_xbox_controller(joystick_name_: str) -> bool:
     :return : True | False
     """
     xbox = False
+    # If you know the name of your controller please add it to xbox_keywords (all in uppercase) if not
+    # included in the list below
     xbox_keywords = ["XBOX", "360"]
     for xbox_words in xbox_keywords:
         xbox_search_result = re.search(xbox_words, joystick_name_)
@@ -735,7 +741,9 @@ def is_joystick_ps3_controller(joystick_name_: str) -> bool:
     :return : True | False
     """
     ps3 = False
-    ps3_keywords = ["PS3", "PLAYSTATION 3", "DUALSHOCK 3", "GIOTECK"]
+    # If you know the name of your controller please add it to ps3_keywords (all in uppercase)
+    # if not included in the list below
+    ps3_keywords = ["PS3", "PLAYSTATION 3", "DUALSHOCK 3", "GIOTECK VX2 2.4G WIRELESS CONTROLLER"]
     for ps3_words in ps3_keywords:
         ps3_search_result = re.search(ps3_words, joystick_name_)
         if ps3_search_result is not None:
@@ -752,7 +760,9 @@ def is_joystick_ps4_controller(joystick_name_: str) -> bool:
     :return : True | False
     """
     ps4 = False
-    ps4_keywords = ["PS4", "PLAYSTATION 4", "DUALSHOCK 4", "WIRELESS CONTROLLER"]
+    # If you know the name of your controller please add it to ps4_keywords (all in uppercase) if not
+    # included in the list below
+    ps4_keywords = ["PS4", "PLAYSTATION 4", "DUALSHOCK 4"]
     for ps4_words in ps4_keywords:
         ps4_search_result = re.search(ps4_words, joystick_name_)
         if ps4_search_result is not None:
@@ -795,6 +805,7 @@ def find_joystick_model(joystick_object_, joystick_name_: str) -> dict:
 
     model_ = {"bck": None, "image": None, "model name": None, "id": None, "object": None}
 
+    # SEARCH MODEL BY NAME
     if is_joystick_xbox_controller(joystick_name_):
         model_               = model_.copy()
         model_["bck"]        = XBOX_BACKGROUND
@@ -824,8 +835,42 @@ def find_joystick_model(joystick_object_, joystick_name_: str) -> dict:
         return -1
 
     else:
-        raise NotImplementedError('\nJoystick model %s is not recognized...' % joystick_name_)
-        return -1
+
+        # BELOW SEARCH MODEL BY BUTTONS NUMBER
+
+        num_buttons = joystick_object_.get_numbuttons()
+
+        # MOST LIKELY TO BE AN XBOX CONTROLLER TYPE
+        if num_buttons == 11:
+            model_ = model_.copy()
+            model_["bck"] = XBOX_BACKGROUND
+            model_["image"] = XBOX_IMAGE
+            model_["model name"] = "XBOX 360 CONTROLLER"
+            model_["id"] = joystick_object_.get_id()
+            model_["object"] = joystick_object_
+
+        # MOST LIKELY TO BE A PS3 CONTROLLER
+        elif num_buttons == 13:
+            model_ = model_.copy()
+            model_["bck"] = PS3_BACKGROUND
+            model_["image"] = PS3_IMAGE
+            model_["model name"] = "PLAYSTATION 3 CONTROLLER"
+            model_["id"] = joystick_object_.get_id()
+            model_["object"] = joystick_object_
+
+        # MOST LIKELY TO BE A PS4 TYPE CONTROLLER
+        elif num_buttons == 16:
+            model_ = model_.copy()
+            model_["bck"] = PS4_BACKGROUND
+            model_["image"] = PS4_IMAGE
+            model_["model name"] = "PLAYSTATION 4 CONTROLLER"
+            model_["id"] = joystick_object_.get_id()
+            model_["object"] = joystick_object_
+
+        # UNKNOWN CONTROLLER
+        else:
+            raise NotImplementedError('\nPS5 joystick is not implemented yet!')
+            return -1
 
     return model_
 
@@ -887,7 +932,7 @@ if __name__ == '__main__':
 
     print('Available modes : ', pygame.display.list_modes())
 
-    MOUSE_CLICK_SOUND = Sound('Assets\\MouseClick.ogg')
+    MOUSE_CLICK_SOUND = Sound('Assets\\MouseClick.wav')
 
     GL.ALL = LayeredUpdatesModified()
     GL.TIME_PASSED_SECONDS = 0
@@ -912,14 +957,14 @@ if __name__ == '__main__':
         model = find_joystick_model(joystick_object, joystick_name)
         if model == -1:
             continue
-
+        print(model["model name"], joystick_name)
         JoystickEmulator(GL, model, pos[n], offset_=(50, 200), layer_=-n, timing_=100.0)
 
     CLOCK = pygame.time.Clock()
     STOP_GAME = False
     FRAME = 0
 
-    pygame.event.set_grab(True)
+    # pygame.event.set_grab(True)
     # control the sharing of input devices with other applications
     # set_grab(bool) -> None
     # When your program runs in a windowed environment, it will share the mouse
@@ -932,6 +977,13 @@ if __name__ == '__main__':
 
         SCREEN.fill((58, 57, 57, 0))
         pygame.event.pump()
+
+        count = pygame.joystick.get_count()
+
+        # QUIT IF NO JOYSTICK (needs approval)
+        # if count == 0:
+        #     STOP_GAME = True
+
         for event in pygame.event.get():
 
             if pygame.version.ver[0] == "2":
@@ -951,6 +1003,7 @@ if __name__ == '__main__':
             keys = pygame.key.get_pressed()
 
             if keys[pygame.K_F8]:
+                pygame.display.flip()
                 pygame.image.save(SCREEN, 'screenshot' + str(FRAME) + '.png')
 
             # ONLY SDL VERSION > 2
